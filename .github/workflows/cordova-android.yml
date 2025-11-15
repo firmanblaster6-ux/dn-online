@@ -1,4 +1,4 @@
-name: build
+name: android-build
 
 on:
   workflow_dispatch:
@@ -7,53 +7,75 @@ on:
       - main
 
 jobs:
-  android:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      # --- CHECKOUT ---
+      - name: Checkout Repo
         uses: actions/checkout@v4
 
+      # --- NODEJS ---
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
+      # --- INSTALL DEPENDENCIES ---
+      - name: Install Dependencies
+        run: npm install
+
+      # --- INSTALL CORDOVA ---
       - name: Install Cordova
         run: npm install -g cordova
 
-      - name: Install dependencies
-        run: npm install
-
+      # --- SETUP JAVA ---
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: "17"
 
+      # --- SETUP ANDROID SDK ---
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Add Android platform
+      # --- ADD ANDROID PLATFORM ---
+      - name: Add Android Platform
         run: cordova platform add android --force
 
-      - name: Build AAB
-        run: cordova build android --release
+      # --- DECODE KEYSTORE ---
+      - name: Decode Keystore
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > release.keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
 
+      # --- BUILD AAB (RELEASE) ---
+      - name: Build AAB
+        run: |
+          cordova build android --release -- --packageType=bundle \
+            -- --keystore=release.keystore \
+            --storePassword="${{ secrets.KEYSTORE_PASSWORD }}" \
+            --alias="${{ secrets.KEY_ALIAS }}" \
+            --password="${{ secrets.KEYSTORE_PASSWORD }}"
+
+      # --- BUILD APK (RELEASE) ---
       - name: Build APK
         run: |
           cd platforms/android
           ./gradlew assembleRelease
 
+      # --- UPLOAD AAB ARTIFACT ---
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: app-release-aab
-          path: platforms/android/app/build/outputs/bundle/release/app-release.aab
+          path: platforms/android/app/build/outputs/bundle/release/*.aab
 
+      # --- UPLOAD APK ARTIFACT ---
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
-          path: |
-            **/outputs/apk/release/*.apk
+          path: platforms/android/app/build/outputs/apk/release/*.apk

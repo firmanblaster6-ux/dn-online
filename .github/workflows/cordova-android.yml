@@ -1,9 +1,8 @@
-name: Build Cordova Android APK
+name: Build Cordova Android
 
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:
 
 jobs:
   build:
@@ -16,16 +15,16 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: 18
 
     - name: Install Cordova
       run: npm install -g cordova
 
-    - name: Install dependencies
+    - name: Install project dependencies
       run: npm install
 
     - name: Add Android platform
-      run: cordova platform add android --force
+      run: cordova platform add android
 
     - name: Build Android APK
       run: cordova build android --release
@@ -33,5 +32,5 @@ jobs:
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: cordova-apk-release
+        name: app-release
         path: platforms/android/app/build/outputs/apk/release/*.apk

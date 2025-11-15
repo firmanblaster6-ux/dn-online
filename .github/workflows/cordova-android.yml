@@ -1,4 +1,4 @@
-name: Build Cordova Android
+name: build
 
 on:
   push:
@@ -10,27 +10,31 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
 
     - name: Set up Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v3
       with:
-        node-version: 18
+        node-version: '18'
 
     - name: Install Cordova
       run: npm install -g cordova
 
-    - name: Install project dependencies
+    - name: Install dependencies
       run: npm install
 
-    - name: Add Android platform
-      run: cordova platform add android
+    # ❌ REMOVE THIS (tidak dipakai)
+    # - name: Add Android platform
+    #   run: cordova platform add android --force
 
-    - name: Build Android APK
+    - name: Prepare Android project
+      run: cordova prepare android
+
+    - name: Build Android Release
       run: cordova build android --release
 
     - name: Upload APK
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v3
       with:
-        name: app-release
+        name: android-apk
         path: platforms/android/app/build/outputs/apk/release/*.apk

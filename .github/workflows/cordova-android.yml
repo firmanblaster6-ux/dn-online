@@ -10,10 +10,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '18'
 
@@ -23,10 +23,6 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    # ❌ REMOVE THIS (tidak dipakai)
-    # - name: Add Android platform
-    #   run: cordova platform add android --force
-
     - name: Prepare Android project
       run: cordova prepare android
 
@@ -34,7 +30,7 @@ jobs:
       run: cordova build android --release
 
     - name: Upload APK
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: android-apk
         path: platforms/android/app/build/outputs/apk/release/*.apk

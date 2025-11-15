@@ -52,7 +52,8 @@ jobs:
           path: platforms/android/app/build/outputs/bundle/release/app-release.aab
 
       - name: Upload APK
-  uses: actions/upload-artifact@v4
-  with:
-    name: app-release-apk
-    path: platforms/android/app/build/outputs/apk/release/*.apk
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: |
+            **/outputs/apk/release/*.apk

@@ -1,4 +1,4 @@
-name: build
+name: android
 
 on:
   workflow_dispatch:
@@ -14,7 +14,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
@@ -28,8 +28,8 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: "17"
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
@@ -37,58 +37,34 @@ jobs:
       - name: Add Android platform
         run: cordova platform add android --force
 
-      # ==========================
-      #   DECODE KEYSTORE
-      # ==========================
       - name: Decode Keystore
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+          echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
 
-      # ==========================
-      #   BUILD SIGNED AAB
-      # ==========================
       - name: Build Signed AAB
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          cordova build android --release \
-            -- --packageType=bundle \
-            --keystore=release.keystore \
-            --storePassword="${{ secrets.KEYSTORE_PASSWORD }}" \
-            --alias="${{ secrets.KEY_ALIAS }}" \
-            --password="${{ secrets.KEYSTORE_PASSWORD }}"
+          cordova build android --release
 
-      # ==========================
-      #   BUILD SIGNED APK
-      # ==========================
       - name: Build Signed APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          cordova build android --release \
-            --keystore=release.keystore \
-            --storePassword="${{ secrets.KEYSTORE_PASSWORD }}" \
-            --alias="${{ secrets.KEY_ALIAS }}" \
-            --password="${{ secrets.KEYSTORE_PASSWORD }}"
+          cordova build android --release -- --packageType=apk
 
-      # ==========================
-      #   DEBUG APK LOCATION
-      # ==========================
-      - name: Debug APK paths
-        run: |
-          echo "=== LIST ALL APK FILES ==="
-          find platforms -name "*.apk" -print
-
-      # ==========================
-      #   UPLOAD AAB
-      # ==========================
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: app-release-aab
-          path: platforms/android/**/*.aab
+          path: platforms/android/app/build/outputs/bundle/release/app-release.aab
 
-      # ==========================
-      #   UPLOAD APK (Wildcard)
-      # ==========================
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
-          path: platforms/android/**/*.apk
+          path: platforms/android/app/build/outputs/apk/release/*.apk

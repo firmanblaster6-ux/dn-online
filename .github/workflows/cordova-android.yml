@@ -42,7 +42,7 @@ jobs:
 
       - name: Build APK
         run: |
-          cd platforms/android/app
+          cd platforms/android
           ./gradlew assembleRelease
 
       - name: Upload AAB
